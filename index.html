@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LiberoLibro — mappa degli spazi indipendenti d'Italia</title>
+<meta name="description" content="Mappa collaborativa di librerie indipendenti, spazi comunitari ed eventi underground in Italia.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; }
+  #mappa { position: fixed; inset: 0; }
+  #pannello {
+    position: fixed; top: 12px; left: 12px; z-index: 1000;
+    background: #fff; padding: 12px 16px; border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.25); max-width: 280px;
+  }
+  #pannello h1 { margin: 0 0 4px; font-size: 1.2rem; }
+  #pannello p { margin: 0 0 8px; font-size: .8rem; color: #444; }
+  #pannello label { display: block; font-size: .9rem; margin: 2px 0; cursor: pointer; }
+  .punto { border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 3px rgba(0,0,0,.5); }
+  .popup h2 { margin: 0 0 4px; font-size: 1rem; }
+  .popup .cat { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: #666; }
+  #segnala { font-size: .8rem; display: inline-block; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div id="mappa" role="application" aria-label="Mappa degli spazi indipendenti d'Italia"></div>
+<div id="pannello">
+  <h1>LiberoLibro</h1>
+  <p>Librerie indipendenti, spazi comunitari ed eventi underground d'Italia.</p>
+  <label><input type="checkbox" data-cat="libreria" checked> 📚 Librerie e biblioteche</label>
+  <label><input type="checkbox" data-cat="spazio" checked> 🏴 Spazi comunitari</label>
+  <label><input type="checkbox" data-cat="evento" checked> 🎪 Eventi</label>
+  <a id="segnala" href="mailto:gabriel.rossi@ceps.eu?subject=Segnalazione%20luogo%20LiberoLibro">Segnala un luogo →</a>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const COLORI = { libreria: '#c0392b', spazio: '#2c3e50', evento: '#8e44ad' };
+const ETICHETTE = { libreria: 'Libreria / biblioteca', spazio: 'Spazio comunitario', evento: 'Evento' };
+
+const mappa = L.map('mappa').setView([42.5, 12.5], 6);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(mappa);
+
+const gruppi = { libreria: L.layerGroup().addTo(mappa), spazio: L.layerGroup().addTo(mappa), evento: L.layerGroup().addTo(mappa) };
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+fetch('luoghi.json').then(r => r.json()).then(luoghi => {
+  for (const l of luoghi) {
+    const icona = L.divIcon({
+      className: 'punto',
+      html: `<div class="punto" style="width:14px;height:14px;background:${COLORI[l.categoria]}"></div>`,
+      iconSize: [14, 14]
+    });
+    const popup = `
+      <div class="popup">
+        <span class="cat">${esc(ETICHETTE[l.categoria])} · ${esc(l.citta)}</span>
+        <h2>${esc(l.nome)}</h2>
+        <p>${esc(l.descrizione)}</p>
+        ${l.data ? `<p><strong>Data:</strong> ${esc(l.data)}</p>` : ''}
+        <p>${esc(l.indirizzo)}</p>
+        ${l.sito ? `<a href="${esc(l.sito)}" target="_blank" rel="noopener">Sito →</a>` : ''}
+      </div>`;
+    L.marker([l.lat, l.lon], { icon: icona, alt: l.nome }).bindPopup(popup).addTo(gruppi[l.categoria]);
+  }
+});
+
+document.querySelectorAll('#pannello input').forEach(cb => cb.addEventListener('change', () => {
+  const g = gruppi[cb.dataset.cat];
+  cb.checked ? g.addTo(mappa) : g.remove();
+}));
+</script>
+</body>
+</html>

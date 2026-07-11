@@ -12,7 +12,8 @@ Zero build step. Un file di dati, una pagina, un crawler, un server.
 
 | File | Cosa fa |
 |------|---------|
-| [index.html](index.html) | La mappa (Leaflet + OpenStreetMap) |
+| [index.html](index.html) | La mappa (Leaflet, base vettoriale bianco/nero) |
+| [europa.geojson](europa.geojson) | Confini d'Europa (Natural Earth): Italia in nero, resto in grigio |
 | [luoghi.json](luoghi.json) | Tutti i luoghi (curati a mano + raccolti da OSM) |
 | [collect.js](collect.js) | Crawler città-per-città (Overpass + Nominatim) |
 | [server.js](server.js) | Server statico per Railway (solo moduli nativi Node) |

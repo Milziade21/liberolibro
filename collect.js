@@ -19,6 +19,13 @@ const CITTA = [
   'Roma', 'Napoli', 'Bari', 'Palermo', 'Catania', 'Cagliari', 'Padova', 'Parma',
   'Modena', 'Ravenna', 'Perugia', 'Pisa', 'Livorno', 'Ancona', 'Pescara', 'Lecce',
   'Cosenza', 'Salerno', 'Brescia', 'Bergamo', 'Trento', 'Bolzano', 'Udine', 'Ferrara',
+  // Sud e isole
+  'Reggio Calabria', 'Catanzaro', 'Crotone', 'Vibo Valentia',
+  'Messina', 'Siracusa', 'Trapani', 'Agrigento', 'Ragusa', 'Caltanissetta', 'Enna',
+  'Sassari', 'Nuoro', 'Oristano', 'Olbia',
+  'Taranto', 'Brindisi', 'Foggia', 'Barletta', 'Andria',
+  'Caserta', 'Benevento', 'Avellino',
+  'Potenza', 'Matera', 'Campobasso',
 ];
 
 // Catene da escludere (match su sottostringa, case-insensitive).

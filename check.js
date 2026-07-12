@@ -10,7 +10,7 @@ for (const l of luoghi) {
   const dove = `"${l.nome || '???'}"`;
   for (const campo of ['nome', 'categoria', 'citta', 'indirizzo', 'lat', 'lon', 'descrizione'])
     assert(l[campo] !== undefined && l[campo] !== '', `${dove}: manca il campo "${campo}"`);
-  assert(['libreria', 'spazio', 'evento'].includes(l.categoria), `${dove}: categoria non valida "${l.categoria}"`);
+  assert(['libreria', 'spazio', 'evento', 'lettura'].includes(l.categoria), `${dove}: categoria non valida "${l.categoria}"`);
   // Bounding box dell'Italia
   assert(l.lat > 35 && l.lat < 48 && l.lon > 6 && l.lon < 19, `${dove}: coordinate fuori dall'Italia (${l.lat}, ${l.lon})`);
   if (l.categoria === 'evento')

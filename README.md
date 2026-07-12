@@ -36,6 +36,21 @@ Due filtri, dal più netto al più fine:
 Campi opzionali per libreria: `specialita`, `consiglio`, `abebooks`, `universitaria`,
 `foto`. Compaiono nella mini-scheda quando presenti; si popolano via contributo dei librai.
 
+## Dove leggere (Amici del libro)
+
+Accanto alle librerie, la mappa segna i **posti dove leggere** in città: parchi,
+moli, angoli book-friendly (categoria `lettura`, chip "Dove leggere").
+
+Alcuni posti si condividono con tutti; altri si tengono per sé. I luoghi con
+`"riservato": true` sono **nascosti di default** e compaiono solo attivando il
+toggle **"Riservati"**.
+
+```json
+{ "nome": "Molo Audace", "categoria": "lettura", "citta": "Trieste",
+  "indirizzo": "Molo Audace", "lat": 45.6494, "lon": 13.7636,
+  "descrizione": "…", "tipo": "molo", "riservato": false }
+```
+
 ## Contributo dei librai
 
 Foto, specialità, consigli e link al catalogo si chiedono direttamente ai luoghi.

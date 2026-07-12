@@ -92,11 +92,12 @@
 
 <script>
 const CAT = {
-  libreria: { etichetta: 'Librerie', colore: 'var(--libreria)' },
-  spazio:   { etichetta: 'Spazi',    colore: 'var(--spazio)' },
-  evento:   { etichetta: 'Eventi',   colore: 'var(--evento)' },
+  libreria: { etichetta: 'Librerie' },
+  spazio:   { etichetta: 'Spazi' },
+  evento:   { etichetta: 'Eventi' },
+  lettura:  { etichetta: 'Dove leggere' },
 };
-const COLORE = { libreria: '#e63946', spazio: '#2a9d8f', evento: '#e9a02a' };
+const COLORE = { libreria: '#e63946', spazio: '#2a9d8f', evento: '#e9a02a', lettura: '#3f7cad' };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const nomeBreve = n => n.split('/')[0].trim();
 // ponytail: foto placeholder da picsum finché non arrivano quelle reali (Street View / Google Maps API).
@@ -113,6 +114,7 @@ let regioni = [], luoghi = [];
 let attiva = null, selezionato = null;
 const filtri = new Set(Object.keys(CAT));
 let soloIndip = false;
+let mostraRiservati = false;
 let query = '';
 const $ = id => document.getElementById(id);
 const svg = $('svg');
@@ -188,6 +190,7 @@ function luoghiVisibili() {
   return luoghi.filter(l =>
     filtri.has(l.categoria) &&
     (!soloIndip || l.indip !== false) &&
+    (mostraRiservati || !l.riservato) &&
     (!attiva || l.regione === attiva) &&
     (nomeBreve(l.nome) + ' ' + (l.citta || '')).toLowerCase().includes(query));
 }
@@ -225,6 +228,8 @@ function mostraDettaglio(l) {
       : '<span class="badge ok">Indipendente</span>'),
     l.universitaria && '<span class="badge">Universitaria</span>',
     l.usato && '<span class="badge">Usato</span>',
+    l.categoria === 'lettura' && `<span class="badge">Dove leggere${l.tipo ? ' · ' + esc(l.tipo) : ''}</span>`,
+    l.riservato && '<span class="badge warn">Riservato — teniamolo per noi</span>',
   ].filter(Boolean).join('');
   $('dettaglio').innerHTML = `
     <button id="torna">← Lista</button>
@@ -262,7 +267,8 @@ function renderFiltri() {
     `<button class="chip" data-cat="${k}" aria-pressed="true"><span class="pallino" style="background:${COLORE[k]}"></span>${v.etichetta}</button>`
   ).join('');
   $('filtri').innerHTML = chips +
-    `<button class="chip" id="soloIndip" aria-pressed="false">Solo indipendenti</button>`;
+    `<button class="chip" id="soloIndip" aria-pressed="false">Solo indipendenti</button>` +
+    `<button class="chip" id="mostraRiservati" aria-pressed="false" title="Posti da tenere per noi, nascosti di default">Riservati</button>`;
   $('filtri').querySelectorAll('.chip[data-cat]').forEach(c => c.addEventListener('click', () => {
     const k = c.dataset.cat;
     filtri.has(k) ? filtri.delete(k) : filtri.add(k);
@@ -272,6 +278,11 @@ function renderFiltri() {
   $('soloIndip').addEventListener('click', () => {
     soloIndip = !soloIndip;
     $('soloIndip').setAttribute('aria-pressed', soloIndip);
+    renderDots(); renderLista();
+  });
+  $('mostraRiservati').addEventListener('click', () => {
+    mostraRiservati = !mostraRiservati;
+    $('mostraRiservati').setAttribute('aria-pressed', mostraRiservati);
     renderDots(); renderLista();
   });
 }

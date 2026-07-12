@@ -15721,5 +15721,56 @@
     "fonte": "osm",
     "osm_id": "node/4887268826",
     "indip": true
+  },
+  {
+    "nome": "Parco Sempione",
+    "categoria": "lettura",
+    "citta": "Milano",
+    "indirizzo": "Piazza Sempione",
+    "lat": 45.4725,
+    "lon": 9.178,
+    "descrizione": "Grande parco nel centro di Milano: prati all ombra e panchine, ideale per leggere.",
+    "tipo": "parco"
+  },
+  {
+    "nome": "Molo Audace",
+    "categoria": "lettura",
+    "citta": "Trieste",
+    "indirizzo": "Molo Audace",
+    "lat": 45.6494,
+    "lon": 13.7636,
+    "descrizione": "Molo sul mare: ci si siede in fondo con un libro e il rumore dell acqua.",
+    "tipo": "molo"
+  },
+  {
+    "nome": "Giardini Margherita",
+    "categoria": "lettura",
+    "citta": "Bologna",
+    "indirizzo": "Via Castiglione",
+    "lat": 44.481,
+    "lon": 11.356,
+    "descrizione": "Il parco storico di Bologna con il laghetto: angoli tranquilli per leggere.",
+    "tipo": "parco"
+  },
+  {
+    "nome": "Villa Borghese",
+    "categoria": "lettura",
+    "citta": "Roma",
+    "indirizzo": "Piazzale Napoleone I",
+    "lat": 41.9145,
+    "lon": 12.492,
+    "descrizione": "Il grande parco di Roma: pinete e panchine lontane dal traffico.",
+    "tipo": "parco"
+  },
+  {
+    "nome": "Angolo sul Tevere (riservato)",
+    "categoria": "lettura",
+    "citta": "Roma",
+    "indirizzo": "Lungotevere, da svelare di persona",
+    "lat": 41.89,
+    "lon": 12.465,
+    "descrizione": "Uno dei posti che teniamo per noi: si condivide di persona, non sulla mappa pubblica.",
+    "tipo": "molo",
+    "riservato": true
   }
 ]

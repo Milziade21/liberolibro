@@ -1,5 +1,7 @@
 // Controllo minimo dei dati: `node check.js`
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const luoghi = require('./luoghi.json');
 
 assert(Array.isArray(luoghi) && luoghi.length > 0, 'luoghi.json deve essere un array non vuoto');
@@ -16,3 +18,18 @@ for (const l of luoghi) {
 }
 
 console.log(`OK — ${luoghi.length} luoghi validi`);
+
+// Blog: se presente, ogni post referenziato deve esistere e avere il front-matter.
+const postsFile = path.join(__dirname, 'blog', 'posts.json');
+if (fs.existsSync(postsFile)) {
+  const posts = JSON.parse(fs.readFileSync(postsFile, 'utf8'));
+  for (const f of posts) {
+    const p = path.join(__dirname, 'blog', f);
+    assert(fs.existsSync(p), `blog: manca il file "${f}"`);
+    const txt = fs.readFileSync(p, 'utf8');
+    for (const campo of ['titolo', 'autore', 'tipo'])
+      assert(new RegExp('^' + campo + ':', 'm').test(txt), `blog "${f}": manca "${campo}" nel front-matter`);
+    assert(/^tipo:\s*(lettori|librai)\s*$/m.test(txt), `blog "${f}": "tipo" deve essere lettori|librai`);
+  }
+  console.log(`OK — ${posts.length} post del blog validi`);
+}

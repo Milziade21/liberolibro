@@ -4,83 +4,292 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LiberoLibro — mappa degli spazi indipendenti d'Italia</title>
-<meta name="description" content="Mappa collaborativa di librerie indipendenti, spazi comunitari ed eventi underground in Italia.">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<meta name="description" content="Mappa delle librerie indipendenti, degli spazi comunitari e degli eventi underground d'Italia.">
 <style>
-  body { margin: 0; font-family: system-ui, sans-serif; }
-  #mappa { position: fixed; inset: 0; }
-  .leaflet-container { background: #fff; } /* mare bianco */
-  #pannello {
-    position: fixed; top: 12px; left: 12px; z-index: 1000;
-    background: #fff; padding: 12px 16px; border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,.25); max-width: 280px;
+  :root {
+    --nero: #111; --grigio: #666; --linea: #e2e2e2; --bg: #fff;
+    --libreria: #e63946; --spazio: #2a9d8f; --evento: #e9a02a;
   }
-  #pannello h1 { margin: 0 0 4px; font-size: 1.2rem; }
-  #pannello p { margin: 0 0 8px; font-size: .8rem; color: #444; }
-  #pannello label { display: block; font-size: .9rem; margin: 2px 0; cursor: pointer; }
-  .punto { border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 3px rgba(0,0,0,.5); }
-  .popup h2 { margin: 0 0 4px; font-size: 1rem; }
-  .popup .cat { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: #666; }
-  #segnala { font-size: .8rem; display: inline-block; margin-top: 6px; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; font-family: system-ui, -apple-system, sans-serif; color: var(--nero); }
+  #app { display: flex; height: 100vh; }
+
+  /* ---- Pannello sinistro ---- */
+  #pannello { width: 380px; flex: 0 0 380px; border-right: 1px solid var(--linea); display: flex; flex-direction: column; }
+  #testata { padding: 20px 24px 12px; }
+  #testata h1 { margin: 0; font-size: 1.5rem; letter-spacing: -.02em; }
+  #testata p { margin: 4px 0 0; font-size: .8rem; color: var(--grigio); }
+  #contesto { padding: 0 24px 12px; font-size: .8rem; color: var(--grigio); min-height: 1.2em; }
+  #contesto button { border: 0; background: none; padding: 0; font: inherit; color: var(--nero); text-decoration: underline; cursor: pointer; }
+
+  #cerca { margin: 0 24px 12px; padding: 10px 12px; border: 1px solid var(--nero); border-radius: 8px; font-size: .9rem; }
+  #filtri { display: flex; gap: 6px; padding: 0 24px 12px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--linea); background: #fff; border-radius: 999px; padding: 5px 12px; font-size: .78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+  .chip .pallino { width: 9px; height: 9px; border-radius: 50%; }
+  .chip[aria-pressed="false"] { opacity: .4; }
+
+  #lista { flex: 1; overflow-y: auto; border-top: 1px solid var(--linea); }
+  .voce { padding: 12px 24px; border-bottom: 1px solid var(--linea); cursor: pointer; }
+  .voce:hover, .voce[aria-selected="true"] { background: #f6f6f4; }
+  .voce h3 { margin: 0; font-size: .95rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .voce h3 .pallino { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; }
+  .voce p { margin: 2px 0 0; font-size: .78rem; color: var(--grigio); }
+  #vuoto { padding: 24px; font-size: .85rem; color: var(--grigio); }
+
+  /* ---- Mappa ---- */
+  #mappa { flex: 1; position: relative; overflow: hidden; }
+  #svg { width: 100%; height: 100%; display: block; }
+  .regione { fill: #fff; stroke: var(--nero); stroke-width: 1; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill .2s, opacity .6s; }
+  .regione:hover { fill: #f2f2ef; }
+  .regione.spenta { opacity: 0; pointer-events: none; }
+  .regione.attiva { fill: #fff; cursor: default; }
+  .dot { stroke: #fff; stroke-width: 1.5; vector-effect: non-scaling-stroke; cursor: pointer; transition: opacity .4s; }
+  .dot.selezionato { stroke: var(--nero); stroke-width: 2; }
+  #foto image { opacity: 0; transition: opacity .6s; }
 </style>
 </head>
 <body>
-<div id="mappa" role="application" aria-label="Mappa degli spazi indipendenti d'Italia"></div>
-<div id="pannello">
-  <h1>LiberoLibro</h1>
-  <p>Librerie indipendenti, spazi comunitari ed eventi underground d'Italia.</p>
-  <label><input type="checkbox" data-cat="libreria" checked> 📚 Librerie e biblioteche</label>
-  <label><input type="checkbox" data-cat="spazio" checked> 🏴 Spazi comunitari</label>
-  <label><input type="checkbox" data-cat="evento" checked> 🎪 Eventi</label>
-  <a id="segnala" href="mailto:gabriel.rossi@ceps.eu?subject=Segnalazione%20luogo%20LiberoLibro">Segnala un luogo →</a>
+<div id="app">
+  <aside id="pannello">
+    <div id="testata">
+      <h1>LiberoLibro</h1>
+      <p>Librerie indipendenti, spazi comunitari ed eventi underground d'Italia.</p>
+    </div>
+    <div id="contesto"></div>
+    <input id="cerca" type="search" placeholder="Cerca per nome o città…" autocomplete="off">
+    <div id="filtri"></div>
+    <div id="lista"></div>
+  </aside>
+  <div id="mappa">
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+      <defs><clipPath id="clip"><path id="clipPath" d=""/></clipPath></defs>
+      <g id="regioni"></g>
+      <g id="foto" clip-path="url(#clip)">
+        <image id="fotoA" preserveAspectRatio="xMidYMid slice"/>
+        <image id="fotoB" preserveAspectRatio="xMidYMid slice"/>
+      </g>
+      <g id="dots"></g>
+    </svg>
+  </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// Tinte scelte per risaltare sull'Italia nera (bordo bianco sui marker).
-const COLORI = { libreria: '#e63946', spazio: '#2a9d8f', evento: '#e9c46a' };
-const ETICHETTE = { libreria: 'Libreria / biblioteca', spazio: 'Spazio comunitario', evento: 'Evento' };
-
-const mappa = L.map('mappa', { attributionControl: true }).setView([42.5, 12.5], 6);
-mappa.attributionControl.addAttribution('Confini: Natural Earth · Dati: OpenStreetMap');
-
-// Base vettoriale bianco/nero: Italia in nero, resto d'Europa in grigio chiaro.
-fetch('europa.geojson').then(r => r.json()).then(geo => {
-  L.geoJSON(geo, {
-    style: f => f.properties.iso === 'IT'
-      ? { fillColor: '#111', fillOpacity: 1, color: '#000', weight: 1 }
-      : { fillColor: '#e9e9e9', fillOpacity: 1, color: '#c4c4c4', weight: 0.8 },
-  }).addTo(mappa);
-});
-
-const gruppi = { libreria: L.layerGroup().addTo(mappa), spazio: L.layerGroup().addTo(mappa), evento: L.layerGroup().addTo(mappa) };
-
+const CAT = {
+  libreria: { etichetta: 'Librerie', colore: 'var(--libreria)' },
+  spazio:   { etichetta: 'Spazi',    colore: 'var(--spazio)' },
+  evento:   { etichetta: 'Eventi',   colore: 'var(--evento)' },
+};
+const COLORE = { libreria: '#e63946', spazio: '#2a9d8f', evento: '#e9a02a' };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nomeBreve = n => n.split('/')[0].trim();
+// ponytail: foto placeholder da picsum finché non arrivano quelle reali (Street View / Google Maps API).
+const fotoDi = l => l.foto || `https://picsum.photos/seed/${encodeURIComponent(l.osm_id || l.nome)}/900/700`;
 
-fetch('luoghi.json').then(r => r.json()).then(luoghi => {
-  for (const l of luoghi) {
-    const icona = L.divIcon({
-      className: 'punto',
-      html: `<div class="punto" style="width:14px;height:14px;background:${COLORI[l.categoria]}"></div>`,
-      iconSize: [14, 14]
-    });
-    const popup = `
-      <div class="popup">
-        <span class="cat">${esc(ETICHETTE[l.categoria])} · ${esc(l.citta)}</span>
-        <h2>${esc(l.nome)}</h2>
-        <p>${esc(l.descrizione)}</p>
-        ${l.data ? `<p><strong>Data:</strong> ${esc(l.data)}</p>` : ''}
-        <p>${esc(l.indirizzo)}</p>
-        ${l.sito ? `<a href="${esc(l.sito)}" target="_blank" rel="noopener">Sito →</a>` : ''}
-      </div>`;
-    L.marker([l.lat, l.lon], { icon: icona, alt: l.nome }).bindPopup(popup).addTo(gruppi[l.categoria]);
+// ---- Proiezione mercatore, adattata al bbox delle regioni ----
+const W = 1000;
+let scala, offX, offY, H;
+const merc = ([lon, lat]) => [lon, Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360)) * 180 / Math.PI];
+let pt = () => [0, 0]; // definita dopo aver calcolato i bounds
+
+// ---- Stato ----
+let regioni = [], luoghi = [];
+let attiva = null, selezionato = null;
+const filtri = new Set(Object.keys(CAT));
+let query = '';
+const $ = id => document.getElementById(id);
+const svg = $('svg');
+
+// ---- Point-in-polygon (ray casting) su coordinate lon/lat ----
+function inRing(p, ring) {
+  let dentro = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > p[1]) !== (yj > p[1]) && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) dentro = !dentro;
   }
+  return dentro;
+}
+function poligoniDi(geom) { // -> array di anelli esterni
+  return geom.type === 'Polygon' ? [geom.coordinates[0]] : geom.coordinates.map(p => p[0]);
+}
+
+// ---- Costruzione path SVG da geometria ----
+function pathDi(geom) {
+  const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
+  let d = '';
+  for (const poly of polys) for (const ring of poly) {
+    d += ring.map((c, i) => (i ? 'L' : 'M') + pt(c).map(n => n.toFixed(1)).join(' ')).join('') + 'Z';
+  }
+  return d;
+}
+function bboxDi(geom) {
+  let b = [Infinity, Infinity, -Infinity, -Infinity];
+  const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
+  for (const poly of polys) for (const ring of poly) for (const c of ring) {
+    const [x, y] = pt(c);
+    b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y);
+  }
+  return b;
+}
+
+// ---- Zoom: tween del viewBox ----
+let vb = [0, 0, W, 0];
+let raf = null;
+function setVB(v) {
+  vb = v; svg.setAttribute('viewBox', v.join(' '));
+  const r = Math.max(v[2] * 0.006, 1.2); // raggio dot costante sullo schermo
+  for (const c of $('dots').children) c.setAttribute('r', c.classList.contains('selezionato') ? r * 1.7 : r);
+}
+function zoomA(target, dur = 700) {
+  const start = vb.slice(), t0 = performance.now();
+  cancelAnimationFrame(raf);
+  const step = now => {
+    const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3); // easeOutCubic
+    setVB(start.map((s, i) => s + (target[i] - s) * e));
+    if (k < 1) raf = requestAnimationFrame(step);
+  };
+  raf = requestAnimationFrame(step);
+}
+const bboxConMargine = (b, m = 0.15) => {
+  const w = b[2] - b[0], h = b[3] - b[1], lato = Math.max(w, h) * (1 + m * 2);
+  const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
+  return [cx - lato / 2, cy - lato / 2, lato, lato];
+};
+
+// ---- Render ----
+function coloreCat(c) { return COLORE[c] || '#111'; }
+
+function renderRegioni() {
+  $('regioni').innerHTML = regioni.map(r =>
+    `<path class="regione" data-nome="${esc(r.nome)}" d="${r.d}"><title>${esc(nomeBreve(r.nome))}</title></path>`
+  ).join('');
+  $('regioni').querySelectorAll('.regione').forEach(p =>
+    p.addEventListener('click', () => selezionaRegione(p.dataset.nome)));
+}
+
+function luoghiVisibili() {
+  return luoghi.filter(l =>
+    filtri.has(l.categoria) &&
+    (!attiva || l.regione === attiva) &&
+    (nomeBreve(l.nome) + ' ' + (l.citta || '')).toLowerCase().includes(query));
+}
+
+function renderDots() {
+  const vis = luoghiVisibili();
+  $('dots').innerHTML = vis.map(l =>
+    `<circle class="dot" data-id="${esc(l.id)}" cx="${l.xy[0].toFixed(1)}" cy="${l.xy[1].toFixed(1)}" fill="${coloreCat(l.categoria)}"/>`
+  ).join('');
+  $('dots').querySelectorAll('.dot').forEach(c =>
+    c.addEventListener('click', () => selezionaLuogo(c.dataset.id)));
+  setVB(vb); // ricalcola i raggi
+}
+
+function renderLista() {
+  const vis = luoghiVisibili().sort((a, b) => nomeBreve(a.nome).localeCompare(nomeBreve(b.nome)));
+  const lista = $('lista');
+  if (!vis.length) { lista.innerHTML = '<div id="vuoto">Nessun risultato.</div>'; return; }
+  lista.innerHTML = vis.map(l => `
+    <div class="voce" data-id="${esc(l.id)}" aria-selected="${l.id === selezionato}">
+      <h3><span class="pallino" style="background:${coloreCat(l.categoria)}"></span>${esc(nomeBreve(l.nome))}</h3>
+      <p>${esc(l.citta || '')}${l.indirizzo ? ' · ' + esc(l.indirizzo) : ''}</p>
+    </div>`).join('');
+  lista.querySelectorAll('.voce').forEach(v =>
+    v.addEventListener('click', () => selezionaLuogo(v.dataset.id)));
+}
+
+function renderContesto() {
+  $('contesto').innerHTML = attiva
+    ? `<button id="reset">← Tutta Italia</button> · ${esc(nomeBreve(attiva))}`
+    : 'Clicca una regione per esplorarla.';
+  const r = $('reset'); if (r) r.addEventListener('click', resetVista);
+}
+
+function renderFiltri() {
+  $('filtri').innerHTML = Object.entries(CAT).map(([k, v]) =>
+    `<button class="chip" data-cat="${k}" aria-pressed="true"><span class="pallino" style="background:${COLORE[k]}"></span>${v.etichetta}</button>`
+  ).join('');
+  $('filtri').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+    const k = c.dataset.cat;
+    filtri.has(k) ? filtri.delete(k) : filtri.add(k);
+    c.setAttribute('aria-pressed', filtri.has(k));
+    renderDots(); renderLista();
+  }));
+}
+
+// ---- Interazioni ----
+function selezionaRegione(nome) {
+  attiva = nome; selezionato = null;
+  const reg = regioni.find(r => r.nome === nome);
+  regioni.forEach(r => $('regioni').querySelector(`[data-nome="${CSS.escape(r.nome)}"]`)
+    .classList.toggle('spenta', r.nome !== nome));
+  $('regioni').querySelector(`[data-nome="${CSS.escape(nome)}"]`).classList.add('attiva');
+  nascondiFoto();
+  zoomA(bboxConMargine(reg.bbox));
+  renderContesto(); renderDots(); renderLista();
+}
+
+function resetVista() {
+  attiva = null; selezionato = null;
+  $('regioni').querySelectorAll('.regione').forEach(p => p.classList.remove('spenta', 'attiva'));
+  nascondiFoto();
+  zoomA([0, 0, W, H]);
+  renderContesto(); renderDots(); renderLista();
+}
+
+let fotoAttiva = 'A';
+function mostraFoto(l, reg) {
+  $('clipPath').setAttribute('d', reg.d);
+  const [x, y, x2, y2] = reg.bbox;
+  const succ = fotoAttiva === 'A' ? 'B' : 'A';
+  const img = $('foto' + succ), img0 = $('foto' + fotoAttiva);
+  img.setAttribute('x', x); img.setAttribute('y', y);
+  img.setAttribute('width', x2 - x); img.setAttribute('height', y2 - y);
+  img.setAttributeNS('http://www.w3.org/1999/xlink', 'href', fotoDi(l));
+  img.setAttribute('href', fotoDi(l));
+  img.style.opacity = 1; img0.style.opacity = 0;
+  fotoAttiva = succ;
+}
+function nascondiFoto() { $('fotoA').style.opacity = 0; $('fotoB').style.opacity = 0; }
+
+function selezionaLuogo(id) {
+  const l = luoghi.find(x => x.id === id);
+  if (!l) return;
+  selezionato = id;
+  if (l.regione && l.regione !== attiva) { selezionaRegione(l.regione); selezionato = id; }
+  const reg = regioni.find(r => r.nome === l.regione);
+  if (reg) mostraFoto(l, reg);
+  renderDots(); renderLista();
+  document.querySelectorAll('.dot').forEach(d => d.classList.toggle('selezionato', d.dataset.id === id));
+  setVB(vb);
+  const v = $('lista').querySelector(`[data-id="${CSS.escape(id)}"]`);
+  if (v) v.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+// ---- Avvio ----
+Promise.all([
+  fetch('regioni.geojson').then(r => r.json()),
+  fetch('luoghi.json').then(r => r.json()),
+]).then(([geo, dati]) => {
+  // bounds proiettati
+  let b = [Infinity, Infinity, -Infinity, -Infinity];
+  const tocca = c => { const m = merc(c); b[0]=Math.min(b[0],m[0]); b[1]=Math.min(b[1],m[1]); b[2]=Math.max(b[2],m[0]); b[3]=Math.max(b[3],m[1]); };
+  geo.features.forEach(f => (f.geometry.type === 'Polygon' ? [f.geometry.coordinates] : f.geometry.coordinates)
+    .forEach(poly => poly.forEach(ring => ring.forEach(tocca))));
+  scala = W / (b[2] - b[0]); H = (b[3] - b[1]) * scala; offX = b[0]; offY = b[3];
+  pt = c => { const m = merc(c); return [(m[0] - offX) * scala, (offY - m[1]) * scala]; };
+  vb = [0, 0, W, H]; setVB(vb);
+
+  regioni = geo.features.map(f => ({ nome: f.properties.nome, geom: f.geometry, d: pathDi(f.geometry), bbox: bboxDi(f.geometry) }));
+
+  // assegna ogni luogo alla regione (point-in-polygon)
+  luoghi = dati.map((l, i) => {
+    const reg = regioni.find(r => poligoniDi(r.geom).some(ring => inRing([l.lon, l.lat], ring)));
+    return { ...l, id: l.osm_id || 'x' + i, xy: pt([l.lon, l.lat]), regione: reg ? reg.nome : null };
+  });
+
+  renderRegioni(); renderFiltri(); renderContesto(); renderDots(); renderLista();
 });
 
-document.querySelectorAll('#pannello input').forEach(cb => cb.addEventListener('change', () => {
-  const g = gruppi[cb.dataset.cat];
-  cb.checked ? g.addTo(mappa) : g.remove();
-}));
+$('cerca').addEventListener('input', e => { query = e.target.value.toLowerCase().trim(); renderDots(); renderLista(); });
 </script>
 </body>
 </html>

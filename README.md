@@ -12,13 +12,24 @@ Zero build step. Un file di dati, una pagina, un crawler, un server.
 
 | File | Cosa fa |
 |------|---------|
-| [index.html](index.html) | La mappa (Leaflet, base vettoriale bianco/nero) |
-| [europa.geojson](europa.geojson) | Confini d'Europa (Natural Earth): Italia in nero, resto in grigio |
+| [index.html](index.html) | L'app: SVG puro, split-screen, zoom per regione, foto mascherate nella sagoma (nessuna dipendenza) |
+| [regioni.geojson](regioni.geojson) | Confini delle 20 regioni italiane (ISTAT via Openpolis, coordinate arrotondate) |
 | [luoghi.json](luoghi.json) | Tutti i luoghi (curati a mano + raccolti da OSM) |
 | [collect.js](collect.js) | Crawler città-per-città (Overpass + Nominatim) |
 | [server.js](server.js) | Server statico per Railway (solo moduli nativi Node) |
 | [check.js](check.js) | Validazione dei dati |
 | [GEMINI_RESEARCH.md](GEMINI_RESEARCH.md) | Prompt di deep research per strutturare il progetto |
+
+## Come funziona la mappa
+
+Nessuna tile, nessun Leaflet: è un SVG disegnato dai confini regionali. Il `viewBox`
+viene animato per lo zoom (bordi netti con `vector-effect`), i luoghi sono assegnati
+alla regione con un point-in-polygon, e la foto di un luogo selezionato viene
+mascherata dentro la sagoma della regione (`clipPath`) con dissolvenza.
+
+Le **foto** dei luoghi sono per ora placeholder generati al volo; il campo `foto`
+in `luoghi.json` le rende definitive. L'idea è popolarlo con Google Street View /
+Maps API (tier gratuito).
 
 ## Sviluppo locale
 

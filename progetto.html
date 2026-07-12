@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LiberoLibro — Il progetto</title>
+<meta name="description" content="Chi siamo e lo spirito di LiberoLibro: una mappa aperta delle librerie indipendenti d'Italia.">
+<style>
+  :root { --nero: #111; --grigio: #666; --linea: #e2e2e2; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, sans-serif; color: var(--nero); line-height: 1.55; }
+  header { border-bottom: 1px solid var(--linea); padding: 20px 24px; display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  header h1 { margin: 0; font-size: 1.4rem; letter-spacing: -.02em; }
+  header a { font-size: .85rem; color: var(--grigio); text-decoration: none; }
+  header a:hover { color: var(--nero); }
+  main { max-width: 680px; margin: 0 auto; padding: 24px; }
+  h2 { font-size: 1.25rem; letter-spacing: -.01em; margin: 32px 0 8px; }
+  p { margin: 12px 0; }
+  .intro { font-size: 1.05rem; }
+  form { margin: 12px 0 8px; padding: 20px; border: 1px solid var(--linea); border-radius: 12px; }
+  label { display: block; font-size: .82rem; color: var(--grigio); margin: 10px 0 4px; }
+  input, textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--linea); border-radius: 8px; font: inherit; }
+  textarea { min-height: 80px; resize: vertical; }
+  button { margin-top: 14px; border: 1px solid var(--nero); background: var(--nero); color: #fff; border-radius: 8px; padding: 9px 16px; font: inherit; cursor: pointer; }
+  button:hover { background: #333; }
+  .nota { font-size: .8rem; color: var(--grigio); }
+</style>
+</head>
+<body>
+<header>
+  <h1>LiberoLibro</h1>
+  <a href="index.html">← Mappa</a>
+  <a href="blog.html">Consigli di lettura</a>
+  <span style="color:var(--grigio);font-size:.85rem">Il progetto</span>
+</header>
+<main>
+  <p class="intro">LiberoLibro è una mappa aperta delle librerie indipendenti, degli
+  spazi comunitari e dei luoghi dove leggere in Italia. Un modo per uscire dalla
+  grande distribuzione e trovare chi fa cultura in modo diverso.</p>
+
+  <h2>Chi siamo</h2>
+  <p>Siamo un'associazione senza scopo di lucro. Non vendiamo nulla, non facciamo
+  pubblicità e non guadagniamo dalla mappa: è gratuita e resterà tale. Il codice e
+  i dati sono aperti.</p>
+
+  <h2>Lo spirito del progetto</h2>
+  <p>Comprare un libro è solo metà della storia. L'altra metà è entrare in una
+  libreria indipendente: un posto con una voce sua, dei saperi che nessun altro ha,
+  una rete di persone attorno. Vogliamo mappare non solo i luoghi, ma anche quello
+  che sanno — le specialità, i consigli, le nicchie — e i posti dove poi andare a
+  leggere, un parco, un molo, una panchina.</p>
+  <p>Per le immagini preferiamo un <strong>disegno</strong> fatto da chi la libreria
+  la vive: così ogni scheda ha uno stile suo. Vanno bene anche foto d'epoca o
+  d'archivio; evitiamo le viste anonime da Street View.</p>
+
+  <h2>Non voglio la mia libreria sulla mappa</h2>
+  <p class="nota">Compila e invia: si aprirà la tua email già pronta. Rimuoviamo la
+  scheda appena riceviamo la richiesta.</p>
+  <form id="optout">
+    <label for="nome">Nome della libreria *</label>
+    <input id="nome" required autocomplete="off">
+    <label for="citta">Città *</label>
+    <input id="citta" required autocomplete="off">
+    <label for="motivo">Note (facoltative)</label>
+    <textarea id="motivo"></textarea>
+    <button type="submit">Chiedi la rimozione</button>
+  </form>
+  <p class="nota">Oppure scrivici direttamente:
+    <a href="mailto:info@liberolibro.it">info@liberolibro.it</a></p>
+</main>
+
+<script>
+document.getElementById('optout').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = id => document.getElementById(id).value.trim();
+  const oggetto = `Rimozione dalla mappa — ${v('nome')} (${v('citta')})`;
+  const corpo = `Chiedo di rimuovere dalla mappa LiberoLibro la libreria:\n\n`
+    + `Nome: ${v('nome')}\nCittà: ${v('citta')}\n`
+    + (v('motivo') ? `Note: ${v('motivo')}\n` : '');
+  location.href = `mailto:info@liberolibro.it?subject=${encodeURIComponent(oggetto)}&body=${encodeURIComponent(corpo)}`;
+});
+</script>
+</body>
+</html>

@@ -12,9 +12,14 @@ facciamo pubblicità: la mappa è e resterà gratuita.
 Abbiamo inserito {nome} ({citta}). Se ti va di arricchire la scheda, ci basta che
 tu risponda a questa mail con quello che vuoi tra:
 
-1) UNA FOTO (insegna, vetrina o interni) + questa autorizzazione:
-   «Autorizzo LiberoLibro a pubblicare la foto allegata sulla mappa, gratuitamente
-    e senza scadenza, con credito al fotografo se indicato.»
+1) UN DISEGNO della vostra libreria vista da fuori, fatto da qualcuno di voi:
+   come la raccontereste con una matita. Vogliamo che ogni libreria abbia il suo
+   stile, il suo modo di mostrarsi — non una foto uguale a tutte le altre.
+   Va bene anche una foto, meglio se d'epoca o d'archivio; evitiamo le viste da
+   Google Street View. Formato leggero: PNG o JPG, massimo ~100 KB.
+   Allegate l'immagine + questa autorizzazione:
+   «Autorizzo LiberoLibro a pubblicare l'immagine allegata sulla mappa,
+    gratuitamente e senza scadenza, con credito all'autore se indicato.»
 
 2) LE VOSTRE SPECIALITÀ: temi, autori, generi o nicchie su cui siete un punto di
    riferimento (es. poesia del Novecento, editoria di montagna, libri per ragazzi,

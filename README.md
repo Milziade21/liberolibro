@@ -65,6 +65,19 @@ node messaggi.js   # -> messaggi.csv (email, oggetto, messaggio) per il mail-mer
 Solo una parte dei luoghi ha un'email su OpenStreetMap; per gli altri il contatto
 va recuperato (sito, social).
 
+### Immagini: un disegno per ogni libreria
+
+Preferiamo un **disegno** fatto da chi la libreria la vive, così ogni scheda ha uno
+stile suo (in alternativa foto d'epoca/d'archivio; no Street View). I file vanno in
+[`foto/`](foto/), il campo `foto` di ogni luogo punta al file, **budget 100 KB max**
+per immagine — `node check.js` fa fallire ogni immagine oltre soglia.
+
+## Il progetto e l'opt-out
+
+[progetto.html](progetto.html) racconta chi siamo e lo spirito del progetto, e
+contiene un **form di opt-out** (chi non vuole comparire): senza backend, compone
+una mail di rimozione via `mailto`. Linkata dall'header della mappa.
+
 ## Roadmap (da decidere)
 
 - **Blog "consigli dei lettori / dei librai"**: contributi editoriali. Approccio

@@ -19,6 +19,19 @@ for (const l of luoghi) {
 
 console.log(`OK — ${luoghi.length} luoghi validi`);
 
+// Budget immagini: i disegni/foto locali devono stare entro 100 KB.
+const LIMITE = 100 * 1024;
+let immagini = 0;
+for (const l of luoghi) {
+  if (!l.foto || /^https?:/i.test(l.foto)) continue; // solo file nel repo
+  const p = path.join(__dirname, l.foto);
+  assert(fs.existsSync(p), `"${l.nome}": immagine mancante "${l.foto}"`);
+  const kb = fs.statSync(p).size;
+  assert(kb <= LIMITE, `"${l.nome}": immagine ${Math.round(kb / 1024)}KB > 100KB (${l.foto})`);
+  immagini++;
+}
+if (immagini) console.log(`OK — ${immagini} immagini entro 100KB`);
+
 // Blog: se presente, ogni post referenziato deve esistere e avere il front-matter.
 const postsFile = path.join(__dirname, 'blog', 'posts.json');
 if (fs.existsSync(postsFile)) {

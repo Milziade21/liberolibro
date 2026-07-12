@@ -7,7 +7,7 @@ const fs = require('fs');
 // ponytail: mittente hardcoded, cambialo con l'email reale dell'associazione.
 const MITTENTE = 'LiberoLibro <info@liberolibro.it>';
 
-const tpl = fs.readFileSync(__dirname + '/messaggio-foto.txt', 'utf8');
+const tpl = fs.readFileSync(__dirname + '/messaggio-contributo.txt', 'utf8');
 const [rigaOggetto, ...corpo] = tpl.split('\n');
 const oggetto = rigaOggetto.replace(/^Oggetto:\s*/, '');
 const testoBase = corpo.join('\n').trim();

@@ -18,22 +18,44 @@ Zero build step. Un file di dati, una pagina, un crawler, un server.
 | [collect.js](collect.js) | Crawler città-per-città (Overpass + Nominatim) |
 | [server.js](server.js) | Server statico per Railway (solo moduli nativi Node) |
 | [check.js](check.js) | Validazione dei dati |
-| [messaggio-foto.txt](messaggio-foto.txt) | Template del messaggio per chiedere le foto ai luoghi |
+| [messaggio-contributo.txt](messaggio-contributo.txt) | Template per chiedere ai librai foto, specialità, consigli, AbeBooks |
 | [messaggi.js](messaggi.js) | Mail-merge: genera `messaggi.csv` dai luoghi con email |
 | [GEMINI_RESEARCH.md](GEMINI_RESEARCH.md) | Prompt di deep research per strutturare il progetto |
 
-## Foto: richiesta ai luoghi
+## Cosa rende "indipendente" una libreria
 
-Le foto si raccolgono chiedendole direttamente ai luoghi. Il template
-[messaggio-foto.txt](messaggio-foto.txt) è pensato per un'associazione no-profit
-(nessuna finalità commerciale) e chiede sia la foto sia il **consenso a pubblicarla**.
+Due filtri, dal più netto al più fine:
+
+1. **Blocklist catene** (`CATENE` in `collect.js`): Feltrinelli, Mondadori, Giunti,
+   Ubik, Libraccio, Athesia, ecc.
+2. **Omonimi = flag** (`annota()` in `collect.js`): un nome presente in **più città**
+   è un conglomerato/franchising, non una singola realtà indipendente. Queste voci
+   restano sulla mappa ma con `indip: false`; il toggle **"Solo indipendenti"** le
+   nasconde. Rilancia il flag senza crawlare con `node collect.js --annota`.
+
+Campi opzionali per libreria: `specialita`, `consiglio`, `abebooks`, `universitaria`,
+`foto`. Compaiono nella mini-scheda quando presenti; si popolano via contributo dei librai.
+
+## Contributo dei librai
+
+Foto, specialità, consigli e link al catalogo si chiedono direttamente ai luoghi.
+Il template [messaggio-contributo.txt](messaggio-contributo.txt) è pensato per
+un'associazione no-profit (nessuna finalità commerciale) e chiede sempre il
+**consenso a pubblicare**.
 
 ```sh
 node messaggi.js   # -> messaggi.csv (email, oggetto, messaggio) per il mail-merge
 ```
 
 Solo una parte dei luoghi ha un'email su OpenStreetMap; per gli altri il contatto
-va recuperato (sito, social). Le foto ricevute vanno nel campo `foto` di `luoghi.json`.
+va recuperato (sito, social).
+
+## Roadmap (da decidere)
+
+- **Blog "consigli dei lettori / dei librai"**: contributi editoriali. Approccio
+  lazy proposto = post in Markdown nel repo, contribuibili via pull request o form
+  che apre una issue — nessun backend. Da confermare prima di costruirlo.
+- Integrazione con canali istituzionali (es. Radio 3) per la promozione della lettura.
 
 ## Come funziona la mappa
 

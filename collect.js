@@ -34,7 +34,7 @@ const CITTA = [
 const CATENE = [
   'feltrinelli', 'mondadori', 'giunti', 'ubik', 'libraccio', 'ibs',
   'libreria coop', 'librerie coop', 'librerie.coop', 'melbookstore', 'mel bookstore',
-  'arion', 'ricordi',
+  'arion', 'ricordi', 'athesia',
 ];
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -74,6 +74,28 @@ const isCatena = nome => {
   return CATENE.some(c => l.includes(c));
 };
 
+// Definizione operativa di "indipendente": un nome presente in più città è un
+// omonimo -> catena/conglomerato (es. Athesia), quindi NON indipendente.
+// Segna anche le librerie universitarie (euristica sul nome).
+function annota(luoghi) {
+  const norm = s => (s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const cittaPerNome = new Map();
+  for (const l of luoghi) {
+    if (l.categoria !== 'libreria') continue;
+    const k = norm(l.nome);
+    if (!cittaPerNome.has(k)) cittaPerNome.set(k, new Set());
+    cittaPerNome.get(k).add(norm(l.citta));
+  }
+  for (const l of luoghi) {
+    if (l.categoria !== 'libreria') { delete l.indip; delete l.omonimi; continue; }
+    const n = cittaPerNome.get(norm(l.nome)).size;
+    l.indip = n === 1;
+    if (n > 1) l.omonimi = n; else delete l.omonimi;
+    if (/universitar|università|univ\.|c\.l\.u|cusl|studium/i.test(l.nome)) l.universitaria = true;
+  }
+  return luoghi;
+}
+
 function toLuogo(el, citta) {
   const t = el.tags || {};
   const lat = el.lat ?? el.center?.lat;
@@ -103,8 +125,14 @@ function toLuogo(el, citta) {
 }
 
 async function main() {
-  const citta = process.argv.slice(2).length ? process.argv.slice(2) : CITTA;
+  const args = process.argv.slice(2);
   const file = path.join(__dirname, 'luoghi.json');
+  if (args.includes('--annota')) { // ri-flagga i dati esistenti senza crawlare
+    const dati = JSON.parse(fs.readFileSync(file, 'utf8'));
+    fs.writeFileSync(file, JSON.stringify(annota(dati), null, 2) + '\n');
+    return console.log(`Ri-annotato: ${dati.length} luoghi`);
+  }
+  const citta = args.length ? args : CITTA;
   const esistenti = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : [];
   const curati = esistenti.filter(l => l.fonte !== 'osm');
   // Parti dalle voci OSM già presenti: così rilanciare poche città è incrementale, non le cancella.
@@ -138,7 +166,7 @@ async function main() {
   const chiave = l => `${l.nome}|${l.citta}`.toLowerCase().trim();
   const curatiKey = new Set(curati.map(chiave));
   const osmFiltrati = [...trovate.values()].filter(l => !curatiKey.has(chiave(l)));
-  const finale = [...curati, ...osmFiltrati];
+  const finale = annota([...curati, ...osmFiltrati]);
 
   fs.writeFileSync(file, JSON.stringify(finale, null, 2) + '\n');
   console.log(`\n${trovate.size} librerie da OSM · ${scartate} catene escluse · ${curati.length} voci curate mantenute → luoghi.json (${finale.length} totali)`);

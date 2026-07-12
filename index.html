@@ -36,6 +36,21 @@
   .voce p { margin: 2px 0 0; font-size: .78rem; color: var(--grigio); }
   #vuoto { padding: 24px; font-size: .85rem; color: var(--grigio); }
 
+  #dettaglio { flex: 1; overflow-y: auto; border-top: 1px solid var(--linea); padding: 16px 24px 32px; }
+  #dettaglio #torna { border: 0; background: none; padding: 0 0 12px; font: inherit; color: var(--grigio); cursor: pointer; }
+  #dettaglio h2 { margin: 0; font-size: 1.25rem; letter-spacing: -.01em; }
+  #dettaglio h4 { margin: 18px 0 4px; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--grigio); }
+  #dettaglio p { margin: 4px 0; font-size: .88rem; line-height: 1.45; }
+  #dettaglio .meta { color: var(--grigio); font-size: .8rem; }
+  #dettaglio .hint { color: var(--grigio); font-style: italic; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .badge { font-size: .68rem; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--linea); }
+  .badge.ok { background: #eef7f4; border-color: #cfe9e1; color: #1c6b5c; }
+  .badge.warn { background: #fdf0ef; border-color: #f5d6d3; color: #a3352c; }
+  .links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .links a { font-size: .82rem; text-decoration: none; border: 1px solid var(--nero); border-radius: 8px; padding: 7px 12px; color: var(--nero); }
+  .links a:hover { background: var(--nero); color: #fff; }
+
   /* ---- Mappa ---- */
   #mappa { flex: 1; position: relative; overflow: hidden; }
   #svg { width: 100%; height: 100%; display: block; }
@@ -58,6 +73,7 @@
     <div id="contesto"></div>
     <input id="cerca" type="search" placeholder="Cerca per nome o città…" autocomplete="off">
     <div id="filtri"></div>
+    <div id="dettaglio" hidden></div>
     <div id="lista"></div>
   </aside>
   <div id="mappa">
@@ -95,6 +111,7 @@ let pt = () => [0, 0]; // definita dopo aver calcolato i bounds
 let regioni = [], luoghi = [];
 let attiva = null, selezionato = null;
 const filtri = new Set(Object.keys(CAT));
+let soloIndip = false;
 let query = '';
 const $ = id => document.getElementById(id);
 const svg = $('svg');
@@ -169,6 +186,7 @@ function renderRegioni() {
 function luoghiVisibili() {
   return luoghi.filter(l =>
     filtri.has(l.categoria) &&
+    (!soloIndip || l.indip !== false) &&
     (!attiva || l.regione === attiva) &&
     (nomeBreve(l.nome) + ' ' + (l.citta || '')).toLowerCase().includes(query));
 }
@@ -196,6 +214,41 @@ function renderLista() {
     v.addEventListener('click', () => selezionaLuogo(v.dataset.id)));
 }
 
+function mostraLista() { $('dettaglio').hidden = true; $('lista').hidden = false; }
+
+function mostraDettaglio(l) {
+  const spec = Array.isArray(l.specialita) ? l.specialita.join(', ') : l.specialita;
+  const badges = [
+    l.categoria === 'libreria' && (l.indip === false
+      ? '<span class="badge warn">Omonimi in più città — da verificare</span>'
+      : '<span class="badge ok">Indipendente</span>'),
+    l.universitaria && '<span class="badge">Universitaria</span>',
+    l.usato && '<span class="badge">Usato</span>',
+  ].filter(Boolean).join('');
+  $('dettaglio').innerHTML = `
+    <button id="torna">← Lista</button>
+    <h2>${esc(nomeBreve(l.nome))}</h2>
+    <div class="badges">${badges}</div>
+    <p class="meta">${esc(l.citta || '')}${l.indirizzo ? ' · ' + esc(l.indirizzo) : ''}</p>
+    <p>${esc(l.descrizione || '')}</p>
+    ${spec ? `<h4>Specialità</h4><p>${esc(spec)}</p>`
+           : '<p class="hint">Specialità non ancora indicate — scrivi al luogo per contribuire.</p>'}
+    ${l.consiglio ? `<h4>Il consiglio del libraio</h4><p>${esc(l.consiglio)}</p>` : ''}
+    <div class="links">
+      ${l.sito ? `<a href="${esc(l.sito)}" target="_blank" rel="noopener">Sito</a>` : ''}
+      ${l.abebooks ? `<a href="${esc(l.abebooks)}" target="_blank" rel="noopener">Catalogo su AbeBooks</a>` : ''}
+      ${l.email ? `<a href="mailto:${esc(l.email)}">Scrivi</a>` : ''}
+    </div>`;
+  $('dettaglio').hidden = false; $('lista').hidden = true;
+  $('torna').addEventListener('click', deseleziona);
+}
+
+function deseleziona() {
+  selezionato = null;
+  mostraLista(); nascondiFoto();
+  document.querySelectorAll('.dot').forEach(d => d.classList.remove('selezionato'));
+}
+
 function renderContesto() {
   $('contesto').innerHTML = attiva
     ? `<button id="reset">← Tutta Italia</button> · ${esc(nomeBreve(attiva))}`
@@ -204,15 +257,22 @@ function renderContesto() {
 }
 
 function renderFiltri() {
-  $('filtri').innerHTML = Object.entries(CAT).map(([k, v]) =>
+  const chips = Object.entries(CAT).map(([k, v]) =>
     `<button class="chip" data-cat="${k}" aria-pressed="true"><span class="pallino" style="background:${COLORE[k]}"></span>${v.etichetta}</button>`
   ).join('');
-  $('filtri').querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+  $('filtri').innerHTML = chips +
+    `<button class="chip" id="soloIndip" aria-pressed="false">Solo indipendenti</button>`;
+  $('filtri').querySelectorAll('.chip[data-cat]').forEach(c => c.addEventListener('click', () => {
     const k = c.dataset.cat;
     filtri.has(k) ? filtri.delete(k) : filtri.add(k);
     c.setAttribute('aria-pressed', filtri.has(k));
     renderDots(); renderLista();
   }));
+  $('soloIndip').addEventListener('click', () => {
+    soloIndip = !soloIndip;
+    $('soloIndip').setAttribute('aria-pressed', soloIndip);
+    renderDots(); renderLista();
+  });
 }
 
 // ---- Interazioni ----
@@ -224,7 +284,7 @@ function selezionaRegione(nome) {
   $('regioni').querySelector(`[data-nome="${CSS.escape(nome)}"]`).classList.add('attiva');
   nascondiFoto();
   zoomA(bboxConMargine(reg.bbox));
-  renderContesto(); renderDots(); renderLista();
+  renderContesto(); renderDots(); renderLista(); mostraLista();
 }
 
 function resetVista() {
@@ -232,7 +292,7 @@ function resetVista() {
   $('regioni').querySelectorAll('.regione').forEach(p => p.classList.remove('spenta', 'attiva'));
   nascondiFoto();
   zoomA([0, 0, W, H]);
-  renderContesto(); renderDots(); renderLista();
+  renderContesto(); renderDots(); renderLista(); mostraLista();
 }
 
 let fotoAttiva = 'A';
@@ -257,11 +317,10 @@ function selezionaLuogo(id) {
   if (l.regione && l.regione !== attiva) { selezionaRegione(l.regione); selezionato = id; }
   const reg = regioni.find(r => r.nome === l.regione);
   if (reg) mostraFoto(l, reg);
-  renderDots(); renderLista();
+  renderDots();
   document.querySelectorAll('.dot').forEach(d => d.classList.toggle('selezionato', d.dataset.id === id));
   setVB(vb);
-  const v = $('lista').querySelector(`[data-id="${CSS.escape(id)}"]`);
-  if (v) v.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  mostraDettaglio(l);
 }
 
 // ---- Avvio ----

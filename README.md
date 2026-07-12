@@ -18,7 +18,22 @@ Zero build step. Un file di dati, una pagina, un crawler, un server.
 | [collect.js](collect.js) | Crawler città-per-città (Overpass + Nominatim) |
 | [server.js](server.js) | Server statico per Railway (solo moduli nativi Node) |
 | [check.js](check.js) | Validazione dei dati |
+| [messaggio-foto.txt](messaggio-foto.txt) | Template del messaggio per chiedere le foto ai luoghi |
+| [messaggi.js](messaggi.js) | Mail-merge: genera `messaggi.csv` dai luoghi con email |
 | [GEMINI_RESEARCH.md](GEMINI_RESEARCH.md) | Prompt di deep research per strutturare il progetto |
+
+## Foto: richiesta ai luoghi
+
+Le foto si raccolgono chiedendole direttamente ai luoghi. Il template
+[messaggio-foto.txt](messaggio-foto.txt) è pensato per un'associazione no-profit
+(nessuna finalità commerciale) e chiede sia la foto sia il **consenso a pubblicarla**.
+
+```sh
+node messaggi.js   # -> messaggi.csv (email, oggetto, messaggio) per il mail-merge
+```
+
+Solo una parte dei luoghi ha un'email su OpenStreetMap; per gli altri il contatto
+va recuperato (sito, social). Le foto ricevute vanno nel campo `foto` di `luoghi.json`.
 
 ## Come funziona la mappa
 

@@ -267,7 +267,7 @@ function selezionaLuogo(id) {
 // ---- Avvio ----
 Promise.all([
   fetch('regioni.geojson').then(r => r.json()),
-  fetch('luoghi.json').then(r => r.json()),
+  fetch('luoghi.json', { cache: 'no-store' }).then(r => r.json()),
 ]).then(([geo, dati]) => {
   // bounds proiettati
   let b = [Infinity, Infinity, -Infinity, -Infinity];

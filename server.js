@@ -14,7 +14,10 @@ http.createServer((req, res) => {
 
   fs.readFile(file, (err, data) => {
     if (err) { res.writeHead(404); return res.end('404'); }
-    res.writeHead(200, { 'content-type': TIPI[path.extname(file)] || 'application/octet-stream' });
+    const ext = path.extname(file);
+    const headers = { 'content-type': TIPI[ext] || 'application/octet-stream' };
+    if (ext === '.json') headers['cache-control'] = 'no-cache'; // i dati cambiano spesso
+    res.writeHead(200, headers);
     res.end(data);
   });
 }).listen(PORT, () => console.log(`LiberoLibro in ascolto su :${PORT}`));

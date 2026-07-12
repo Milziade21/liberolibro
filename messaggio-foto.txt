@@ -1,0 +1,28 @@
+Oggetto: LiberoLibro — una foto per la mappa delle librerie indipendenti d'Italia
+
+Ciao {nome},
+
+siamo LiberoLibro, un'associazione senza scopo di lucro che sta costruendo una
+mappa aperta delle librerie indipendenti, degli spazi comunitari e degli eventi
+underground d'Italia. L'obiettivo è dare visibilità a queste realtà e aiutare le
+persone a scoprirle. Non vendiamo nulla e non facciamo pubblicità: la mappa è
+gratuita e resterà tale.
+
+Abbiamo inserito {nome} ({citta}) tra i luoghi mappati. Ci farebbe piacere
+mostrare una vostra foto accanto alla scheda, così chi vi cerca vi riconosce
+subito.
+
+Se vi va, potete rispondere a questa mail allegando **una foto** (dell'insegna,
+della vetrina o degli interni) e confermando questa frase:
+
+  «Autorizzo LiberoLibro a pubblicare la foto allegata sulla mappa, gratuitamente
+   e senza scadenza, con eventuale credito al fotografo se indicato.»
+
+Ci basta l'autorizzazione: la foto resta vostra. In qualsiasi momento potete
+scriverci per aggiornarla o rimuoverla, e potete chiederci di togliere del tutto
+la vostra scheda dalla mappa.
+
+Grazie per quello che fate.
+
+LiberoLibro
+{email_mittente}

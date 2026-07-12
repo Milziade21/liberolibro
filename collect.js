@@ -32,10 +32,20 @@ const CATENE = [
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+// Retry con backoff su 429/5xx: gli endpoint pubblici rate-limitano spesso.
+async function fetchRetry(url, opts = {}, tentativi = 4) {
+  for (let i = 0; i < tentativi; i++) {
+    const r = await fetch(url, opts);
+    if (r.ok) return r;
+    if (r.status !== 429 && r.status < 500) throw new Error(`HTTP ${r.status}`);
+    if (i < tentativi - 1) await sleep(3000 * (i + 1)); // 3s, 6s, 9s
+    else throw new Error(`HTTP ${r.status} dopo ${tentativi} tentativi`);
+  }
+}
+
 async function geocodifica(citta) {
   const url = `${NOMINATIM}?q=${encodeURIComponent(citta + ', Italia')}&format=json&limit=1`;
-  const r = await fetch(url, { headers: { 'User-Agent': UA } });
-  if (!r.ok) throw new Error(`Nominatim ${r.status} per ${citta}`);
+  const r = await fetchRetry(url, { headers: { 'User-Agent': UA } });
   const [primo] = await r.json();
   if (!primo) return null;
   // boundingbox = [south, north, west, east] come stringhe
@@ -44,12 +54,11 @@ async function geocodifica(citta) {
 
 async function libreriePerBbox([s, n, w, e]) {
   const query = `[out:json][timeout:90];(nwr["shop"="books"](${s},${w},${n},${e}););out center tags;`;
-  const r = await fetch(OVERPASS, {
+  const r = await fetchRetry(OVERPASS, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA },
     body: 'data=' + encodeURIComponent(query),
   });
-  if (!r.ok) throw new Error(`Overpass ${r.status}`);
   return (await r.json()).elements || [];
 }
 
@@ -79,6 +88,7 @@ function toLuogo(el, citta) {
       ? `Libreria dell'usato a ${citta}. Scheda generata da OpenStreetMap: verificare i dettagli.`
       : `Libreria indipendente a ${citta}. Scheda generata da OpenStreetMap: verificare i dettagli.`,
     sito: t.website || t['contact:website'] || undefined,
+    email: t.email || t['contact:email'] || undefined,
     usato: usato || undefined,
     fonte: 'osm',
     osm_id: `${el.type}/${el.id}`,
@@ -87,7 +97,11 @@ function toLuogo(el, citta) {
 
 async function main() {
   const citta = process.argv.slice(2).length ? process.argv.slice(2) : CITTA;
-  const trovate = new Map(); // osm_id -> luogo (dedup tra bbox sovrapposti)
+  const file = path.join(__dirname, 'luoghi.json');
+  const esistenti = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : [];
+  const curati = esistenti.filter(l => l.fonte !== 'osm');
+  // Parti dalle voci OSM già presenti: così rilanciare poche città è incrementale, non le cancella.
+  const trovate = new Map(esistenti.filter(l => l.fonte === 'osm').map(l => [l.osm_id, l]));
   let scartate = 0;
 
   for (const c of citta) {
@@ -113,11 +127,11 @@ async function main() {
     }
   }
 
-  // Unisci con i luoghi curati a mano (tutto ciò che non ha fonte "osm").
-  const file = path.join(__dirname, 'luoghi.json');
-  const esistenti = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : [];
-  const curati = esistenti.filter(l => l.fonte !== 'osm');
-  const finale = [...curati, ...trovate.values()];
+  // Unisci con i luoghi curati a mano; scarta le voci OSM che duplicano una voce curata (stesso nome+città).
+  const chiave = l => `${l.nome}|${l.citta}`.toLowerCase().trim();
+  const curatiKey = new Set(curati.map(chiave));
+  const osmFiltrati = [...trovate.values()].filter(l => !curatiKey.has(chiave(l)));
+  const finale = [...curati, ...osmFiltrati];
 
   fs.writeFileSync(file, JSON.stringify(finale, null, 2) + '\n');
   console.log(`\n${trovate.size} librerie da OSM · ${scartate} catene escluse · ${curati.length} voci curate mantenute → luoghi.json (${finale.length} totali)`);
